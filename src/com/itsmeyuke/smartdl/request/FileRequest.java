@@ -1,21 +1,21 @@
 package com.itsmeyuke.smartdl.request;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.itsmeyuke.smartdl.core.SmartDL;
 import com.itsmeyuke.smartdl.model.RequestEntity;
+import com.itsmeyuke.smartdl.utils.ConnectionsUtils;
 
 public class FileRequest extends DownloadRequest {
 
 	@Override
-	protected FileRequest createRequestObject(String url, Map<String, Object> headers) {
-		int totalSize = getContentLength(url, headers);
+	protected FileRequest createRequestObject(SmartDL smartDL) {
+		String url = smartDL.getUrl();
+		Map<String, Object> headers = smartDL.getHeaders();
+		int totalSize = ConnectionsUtils.getContentLength(url, headers);
 		List<String> ranges = getRangesByTotalLength(totalSize, 4);
 		DownloadRequest downloadRequest = new FileRequest();
 		List<RequestEntity> requestEntities = new ArrayList<>();
@@ -33,31 +33,7 @@ public class FileRequest extends DownloadRequest {
 		return (FileRequest) downloadRequest;
 	}
 
-	private int getContentLength(String url2, Map<String, Object> headers) {
-		URLConnection conn = null;
-		try {
-			URL url = new URL(url2);
-			conn = url.openConnection();
-			if (headers != null && !headers.isEmpty()) {
-				for (String key : headers.keySet()) {
-					conn.setRequestProperty(key, headers.get(key).toString());
-				}
-			}
-			if (conn instanceof HttpURLConnection) {
-				((HttpURLConnection) conn).setRequestMethod("HEAD");
-			}
-			conn.getInputStream();
-			return conn.getContentLength();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} finally {
-			if (conn instanceof HttpURLConnection) {
-				((HttpURLConnection) conn).disconnect();
-			}
-		}
-	}
-	
-	private List<String> getRangesByTotalLength(int totalBytes, int numberOfSpits) {
+	public List<String> getRangesByTotalLength(int totalBytes, int numberOfSpits) {
 		
 		int quotient = totalBytes / numberOfSpits;
 		int reminder = totalBytes % numberOfSpits;
@@ -73,5 +49,4 @@ public class FileRequest extends DownloadRequest {
 		}
 		return out;
 	}
-
 }

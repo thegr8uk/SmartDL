@@ -49,7 +49,22 @@ public class DownloadThread implements Callable<DownloadObject> {
 			conn.getInputStream();
 			return conn.getContentLength();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			try {
+				URL url = new URL(url2);
+				conn = url.openConnection();
+				if (conn instanceof HttpURLConnection) {
+					((HttpURLConnection) conn).setRequestMethod("GET");
+				}
+				if (headers2 != null && !headers2.isEmpty()) {
+					for (String key : headers2.keySet()) {
+						conn.setRequestProperty(key, headers2.get(key).toString());
+					}
+				}
+				conn.getInputStream();
+				return conn.getContentLength();
+			} catch (Exception e2) {
+				throw new RuntimeException(e);
+			}
 		} finally {
 			if (conn instanceof HttpURLConnection) {
 				((HttpURLConnection) conn).disconnect();

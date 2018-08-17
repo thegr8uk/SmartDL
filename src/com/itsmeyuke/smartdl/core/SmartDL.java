@@ -28,6 +28,9 @@ public final class SmartDL {
 	private int numberOfParallelConnections;
 	private DownloadListener downloadListener;
 	private int updatesIntervalInMs;
+	private RequestFactory.RequestType requestType;
+	private IntermediateParser intermediateParser;
+	private String postData;
 
 	private SmartDL(Builder builder) {
 		setDirectory(builder.directory);
@@ -39,6 +42,9 @@ public final class SmartDL {
 		setNumberOfParallelConnections(builder.numberOfParallelConnections);
 		setDownloadListeners(builder.downloadListener);
 		setUpdatesIntervalInMs(builder.updatesIntervalInMs);
+		setRequestAs(builder.requestType);
+		setIntermediateParser(builder.intermediateParser);
+		setPostData(builder.postData);
 	}
 
 	public static Builder newDownload() {
@@ -117,6 +123,30 @@ public final class SmartDL {
 		this.updatesIntervalInMs = updatesIntervalInMs;
 	}
 	
+	public RequestFactory.RequestType getRequestAs() {
+		return requestType;
+	}
+
+	public void setRequestAs(RequestFactory.RequestType requestType) {
+		this.requestType = requestType;
+	}
+	
+	public IntermediateParser getIntermediateParser() {
+		return intermediateParser;
+	}
+
+	public void setIntermediateParser(IntermediateParser intermediateParser) {
+		this.intermediateParser = intermediateParser;
+	}
+	
+	public String getPostData() {
+		return postData;
+	}
+	
+	public void setPostData(String postData) {
+		this.postData = postData;
+	}
+	
 	public static final class Builder {
 		
 		private String directory;
@@ -128,6 +158,9 @@ public final class SmartDL {
 		private int numberOfParallelConnections;
 		private DownloadListener downloadListener;
 		private int updatesIntervalInMs;
+		private RequestFactory.RequestType requestType;
+		private IntermediateParser intermediateParser;
+		private String postData;
 
 		private Builder() {
 		}
@@ -167,6 +200,11 @@ public final class SmartDL {
 			return this;
 		}
 		
+		public Builder setRequestAs(RequestFactory.RequestType requestType) {
+			this.requestType = requestType;
+			return this;
+		}
+		
 		public Builder downloadListener(DownloadListener downloadListener) {
 			this.downloadListener = downloadListener;
 			return this;
@@ -174,6 +212,16 @@ public final class SmartDL {
 		
 		public Builder updatesIntervalInMs(int updatesIntervalInMs) {
 			this.updatesIntervalInMs = updatesIntervalInMs;
+			return this;
+		}
+		
+		public Builder intermediateParser(IntermediateParser intermediateParser) {
+			this.intermediateParser = intermediateParser;
+			return this;
+		}
+		
+		public Builder postData(String postData) {
+			this.postData = postData;
 			return this;
 		}
 
@@ -184,7 +232,7 @@ public final class SmartDL {
 
 	public void execute() {
 		
-		DownloadRequest downloadRequest = RequestFactory.getDownloadRequest(this.url, this.headers);
+		DownloadRequest downloadRequest = RequestFactory.getDownloadRequest(this);
 		int numberOfThreads = this.numberOfParallelConnections == 0 ? 5 : this.numberOfParallelConnections;
 		DownloadListener downloadListener2 = this.downloadListener;
 		if(downloadListener2 != null)
@@ -283,6 +331,7 @@ public final class SmartDL {
 		String extension = ".ext";
 		if(uri.contains(".")) {
 		    extension = uri.substring(url.lastIndexOf("."));
+		    extension = extension.replaceAll("[^A-Za-z0-9]", "");
 		}
 		return extension;
 	}
@@ -293,6 +342,9 @@ public final class SmartDL {
 		String decodedUrl = java.net.URLDecoder.decode(uri);
 		fileName = decodedUrl.substring(decodedUrl.lastIndexOf('/')+1, decodedUrl.length());
 		String fileNameWithoutExtn = fileName.substring(0, fileName.lastIndexOf('.'));
+		if(fileNameWithoutExtn.contains("?"))
+			fileNameWithoutExtn = fileNameWithoutExtn.substring(0, fileNameWithoutExtn.indexOf('?'));
 		return fileNameWithoutExtn;
 	}
+	
 }
